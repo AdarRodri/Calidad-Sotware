@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
         } else if (usuario?.rol === "medico") {
             await mostrarPanelMedico();
         } else {
-            contenido.innerHTML = `<h3>Panel de administración</h3><p>Selecciona una opción del menú para comenzar.</p>`;
+            mostrarPanelAdmin();
         }
     }
 
@@ -80,6 +80,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const usuario = obtenerUsuario();
         if (usuario?.rol === "paciente") await mostrarPanelPaciente();
         else if (usuario?.rol === "medico") await mostrarPanelMedico();
+        else if (usuario?.rol === "admin") mostrarPanelAdmin();
         else contenido.innerHTML = `<h3>Inicio</h3><p>Bienvenido al sistema MediCitas.</p>`;
     });
 
@@ -87,6 +88,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const usuario = obtenerUsuario();
         if (usuario?.rol === "paciente") await mostrarCitas();
         else if (usuario?.rol === "medico") await mostrarPanelMedico();
+        else if (usuario?.rol === "admin") mostrarPanelAdmin();
         else contenido.innerHTML = `<h3>Gestión de citas</h3><p>Selecciona un módulo autorizado.</p>`;
     });
 

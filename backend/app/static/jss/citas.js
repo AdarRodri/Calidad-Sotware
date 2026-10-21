@@ -306,3 +306,69 @@ async function mostrarPanelMedico() {
         document.getElementById("btnReintentarAgenda").addEventListener("click", mostrarPanelMedico);
     }
 }
+
+/* ===================== Panel del administrador ===================== */
+
+async function registrarMedico(datos) {
+    return apiRequest("/admin/medicos", {
+        method: "POST",
+        body: JSON.stringify(datos)
+    });
+}
+
+function mostrarPanelAdmin() {
+    const contenido = document.getElementById("contenido");
+    contenido.innerHTML = `
+        <div class="section-heading"><div><span class="eyebrow">ADMINISTRACIÓN</span><h3>Registrar médico</h3>
+        <p>Crea la cuenta de un nuevo médico. Podrá iniciar sesión con el correo y la contraseña que definas aquí.</p></div></div>
+        <form id="formRegistroMedico" class="appointment-form" autocomplete="off">
+            <div class="form-row">
+                <div class="form-group"><label for="medNombre">Nombre *</label><input id="medNombre" type="text" maxlength="80" required></div>
+                <div class="form-group"><label for="medApellido">Apellido *</label><input id="medApellido" type="text" maxlength="80" required></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label for="medEmail">Correo electrónico *</label><input id="medEmail" type="email" maxlength="120" required></div>
+                <div class="form-group"><label for="medPassword">Contraseña *</label><input id="medPassword" type="password" minlength="8" maxlength="72" autocomplete="new-password" required></div>
+            </div>
+            <div class="form-row">
+                <div class="form-group"><label for="medEspecialidad">Especialidad *</label><input id="medEspecialidad" type="text" maxlength="100" placeholder="Ej. Cardiología" required></div>
+                <div class="form-group"><label for="medTelefono">Teléfono (opcional)</label><input id="medTelefono" type="tel" maxlength="20" placeholder="Ej. 300 123 4567"></div>
+            </div>
+            <div class="form-notice" role="note">La contraseña debe tener al menos 8 caracteres. El teléfono es opcional.</div>
+            <div class="form-actions"><button class="btn-secondary" type="reset">Limpiar</button><button class="btn-primary" type="submit" id="btnGuardarMedico">Registrar médico</button></div>
+        </form>`;
+
+    const form = document.getElementById("formRegistroMedico");
+    form.addEventListener("submit", async event => {
+        event.preventDefault();
+        const datos = {
+            nombre: document.getElementById("medNombre").value.trim(),
+            apellido: document.getElementById("medApellido").value.trim(),
+            email: document.getElementById("medEmail").value.trim(),
+            password: document.getElementById("medPassword").value,
+            especialidad: document.getElementById("medEspecialidad").value.trim(),
+            telefono: document.getElementById("medTelefono").value.trim()
+        };
+        if (!datos.nombre || !datos.apellido || !datos.email || !datos.password || !datos.especialidad) {
+            mostrarToast("Completa todos los campos obligatorios.");
+            return;
+        }
+        if (datos.password.length < 8) {
+            mostrarToast("La contraseña debe tener al menos 8 caracteres.");
+            return;
+        }
+        const boton = document.getElementById("btnGuardarMedico");
+        boton.disabled = true;
+        boton.textContent = "Registrando...";
+        try {
+            const respuesta = await registrarMedico(datos);
+            mostrarToast(respuesta.mensaje || "Médico registrado correctamente.");
+            form.reset();
+        } catch (error) {
+            mostrarToast(error.message || "No se pudo registrar al médico.");
+        } finally {
+            boton.disabled = false;
+            boton.textContent = "Registrar médico";
+        }
+    });
+}
