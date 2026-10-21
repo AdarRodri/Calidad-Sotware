@@ -1,3 +1,8 @@
+Usuario adminstrador para agregar a los medicos:
+Usuario: alexdavid97608@gmail.com
+Contraseña:123456789
+
+
 # MediCitas
 
 Sistema web para la gestión de citas médicas.
