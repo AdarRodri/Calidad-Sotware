@@ -2,6 +2,11 @@ Usuario adminstrador para agregar a los medicos:
 Usuario: alexdavid97608@gmail.com
 Contraseña:123456789
 
+Paciente = Lo puedes registar
+Medico:
+Usuario: Mondo@gmail.com 
+Contraseña: 123456789
+
 
 # MediCitas
 
