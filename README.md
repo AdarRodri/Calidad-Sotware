@@ -1,3 +1,11 @@
+
+Paciente = Lo puedes registar
+
+Medico:
+Usuario: Poco@gmail.com 
+Contraseña: 123456789
+
+
 # MediCitas
 
 Sistema web para la gestión de citas médicas.
