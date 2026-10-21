@@ -1,0 +1,222 @@
+openapi: 3.0.3
+
+info:
+  title: MediCitas API
+  description: API REST para gestión de citas médicas
+  version: 1.0.0
+
+servers:
+  - url: http://127.0.0.1:5000
+
+tags:
+  - name: Auth
+  - name: Usuarios
+  - name: Médicos
+  - name: Citas
+
+paths:
+
+  /api/auth/registro:
+
+    post:
+
+      tags:
+        - Auth
+
+      summary: Registrar paciente
+
+      responses:
+
+        "201":
+          description: Usuario creado
+
+        "400":
+          description: Datos inválidos
+
+        "409":
+          description: Correo ya registrado
+
+
+  /api/auth/login:
+
+    post:
+
+      tags:
+        - Auth
+
+      summary: Iniciar sesión
+
+      responses:
+
+        "200":
+          description: Login exitoso
+
+        "400":
+          description: Datos inválidos
+
+        "401":
+          description: Credenciales incorrectas
+
+
+  /api/auth/perfil:
+
+    get:
+
+      tags:
+        - Auth
+
+      summary: Obtener perfil
+
+      security:
+        - bearerAuth: []
+
+      responses:
+
+        "200":
+          description: Perfil obtenido
+
+        "401":
+          description: Token inválido o ausente
+
+
+  /api/medicos:
+
+    get:
+
+      tags:
+        - Médicos
+
+      summary: Listar médicos
+
+      security:
+        - bearerAuth: []
+
+      responses:
+
+        "200":
+          description: Lista de médicos
+
+        "401":
+          description: No autenticado
+
+
+    post:
+
+      tags:
+        - Médicos
+
+      summary: Crear médico
+
+      security:
+        - bearerAuth: []
+
+      responses:
+
+        "201":
+          description: Médico creado
+
+        "400":
+          description: Datos inválidos
+
+        "401":
+          description: No autenticado
+
+        "403":
+          description: Sin permisos
+
+        "409":
+          description: Conflicto
+
+
+  /api/citas:
+
+    get:
+
+      tags:
+        - Citas
+
+      summary: Listar citas
+
+      security:
+        - bearerAuth: []
+
+      responses:
+
+        "200":
+          description: Lista de citas
+
+        "401":
+          description: No autenticado
+
+
+    post:
+
+      tags:
+        - Citas
+
+      summary: Crear cita
+
+      security:
+        - bearerAuth: []
+
+      responses:
+
+        "201":
+          description: Cita creada
+
+        "400":
+          description: Datos inválidos
+
+        "401":
+          description: No autenticado
+
+        "409":
+          description: Horario ocupado
+
+
+  /api/citas/{cita_id}/cancelar:
+
+    put:
+
+      tags:
+        - Citas
+
+      summary: Cancelar cita
+
+      security:
+        - bearerAuth: []
+
+      parameters:
+
+        - name: cita_id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+      responses:
+
+        "200":
+          description: Cita cancelada
+
+        "401":
+          description: No autenticado
+
+        "403":
+          description: Sin permisos
+
+        "404":
+          description: Cita no encontrada
+
+
+components:
+
+  securitySchemes:
+
+    bearerAuth:
+
+      type: http
+
+      scheme: bearer
+
+      bearerFormat: JWT
