@@ -231,16 +231,37 @@ async function mostrarFormularioCita() {
 
 /* ===================== Panel del médico ===================== */
 
+function mayusculaInicial(texto) {
+    return texto ? texto.charAt(0).toUpperCase() + texto.slice(1) : texto;
+}
+
 function tarjetaCitaMedico(cita) {
     const estado = String(cita.estado || "programada").toLowerCase();
     const fecha = new Date(cita.fecha_hora);
+    const fechaValida = !Number.isNaN(fecha.getTime());
     const nombrePaciente = cita.paciente_nombre || `Paciente #${cita.paciente_id}`;
-    const puedeConfirmar = [ "programada", "pendiente" ].includes(estado) && fecha > new Date();
+    const fechaTexto = fechaValida
+        ? mayusculaInicial(fecha.toLocaleDateString("es-CO", { weekday: "long", day: "numeric", month: "long", year: "numeric" }))
+        : "Sin fecha";
+    const horaTexto = fechaValida
+        ? fecha.toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })
+        : "Sin hora";
+    const esPendiente = ["programada", "pendiente"].includes(estado);
+    const puedeConfirmar = esPendiente && fechaValida && fecha > new Date();
+    const aviso = esPendiente && fechaValida && fecha <= new Date()
+        ? `<small class="appointment-note">La hora de esta cita ya pasó.</small>` : "";
+
     return `<article class="appointment-card">
-        <div class="appointment-date"><span>${escaparHTML(fecha.toLocaleDateString("es-CO", { day: "2-digit" }))}</span><small>${escaparHTML(fecha.toLocaleDateString("es-CO", { month: "short" }))}</small></div>
-        <div class="appointment-info"><h4>${escaparHTML(nombrePaciente)}</h4><p><strong>Fecha:</strong> ${fechaLegible(cita.fecha_hora)}</p><p><strong>Motivo:</strong> ${escaparHTML(cita.motivo || "No especificado")}</p></div>
+        <div class="appointment-date"><span>${fechaValida ? escaparHTML(fecha.toLocaleDateString("es-CO", { day: "2-digit" })) : "--"}</span><small>${fechaValida ? escaparHTML(fecha.toLocaleDateString("es-CO", { month: "short" })) : ""}</small></div>
+        <div class="appointment-info">
+            <h4>Paciente: ${escaparHTML(nombrePaciente)}</h4>
+            <p><strong>Fecha:</strong> ${escaparHTML(fechaTexto)}</p>
+            <p><strong>Hora:</strong> ${escaparHTML(horaTexto)}</p>
+            <p><strong>Motivo:</strong> ${escaparHTML(cita.motivo || "No especificado")}</p>
+        </div>
         <div class="appointment-actions"><span class="status-badge status-${escaparHTML(estado)}">${escaparHTML(estadoLegible(estado))}</span>
-        ${puedeConfirmar ? `<button class="btn-small btn-success" type="button" data-confirmar-cita="${Number(cita.id)}">Confirmar cita</button>` : ""}</div>
+        ${puedeConfirmar ? `<button class="btn-small btn-success" type="button" data-confirmar-cita="${Number(cita.id)}">Confirmar cita</button>` : ""}
+        ${aviso}</div>
     </article>`;
 }
 
@@ -264,6 +285,16 @@ function enlazarConfirmaciones(contenedor) {
     });
 }
 
+function pintarListaCitasMedico(idContenedor, citas, vacioTitulo, vacioTexto) {
+    const contenedor = document.getElementById(idContenedor);
+    if (!citas.length) {
+        contenedor.innerHTML = `<div class="empty-state"><h4>${escaparHTML(vacioTitulo)}</h4>${vacioTexto ? `<p>${escaparHTML(vacioTexto)}</p>` : ""}</div>`;
+        return contenedor;
+    }
+    contenedor.innerHTML = citas.map(tarjetaCitaMedico).join("");
+    return contenedor;
+}
+
 async function mostrarPanelMedico() {
     const contenido = document.getElementById("contenido");
     contenido.innerHTML = `<div class="loading-state" role="status">Cargando tu agenda...</div>`;
@@ -272,13 +303,14 @@ async function mostrarPanelMedico() {
         const respuesta = await obtenerCitas();
         const citas = respuesta.citas || [];
         const porEstado = (...estados) => citas.filter(c => estados.includes(String(c.estado || "").toLowerCase()));
-        const pendientes = porEstado("programada", "pendiente").sort((a, b) => new Date(a.fecha_hora) - new Date(b.fecha_hora));
-        const confirmadas = porEstado("confirmada");
+        const masProximaPrimero = (a, b) => new Date(a.fecha_hora) - new Date(b.fecha_hora);
+        const pendientes = porEstado("programada", "pendiente").sort(masProximaPrimero);
+        const confirmadas = porEstado("confirmada").sort(masProximaPrimero);
         const canceladas = porEstado("cancelada").sort((a, b) => new Date(b.fecha_hora) - new Date(a.fecha_hora));
 
         contenido.innerHTML = `
             <div class="section-heading"><div><span class="eyebrow">AGENDA MÉDICA</span><h3>Mis citas</h3>
-            <p>Confirma las solicitudes de tus pacientes y revisa las citas canceladas.</p></div></div>
+            <p>Revisa la fecha, la hora y el paciente de cada cita, y confirma las solicitudes pendientes.</p></div></div>
             <div class="stats-grid">
                 <article class="stat-card"><span>Pendientes</span><strong>${pendientes.length}</strong><small>Esperando tu confirmación</small></article>
                 <article class="stat-card"><span>Confirmadas</span><strong>${confirmadas.length}</strong><small>Ya aceptadas por ti</small></article>
@@ -286,89 +318,18 @@ async function mostrarPanelMedico() {
             </div>
             <div class="panel-subheading"><h3>Citas pendientes</h3></div>
             <div id="medicoPendientes"></div>
+            <div class="panel-subheading"><h3>Citas confirmadas</h3></div>
+            <div id="medicoConfirmadas"></div>
             <div class="panel-subheading"><h3>Citas canceladas</h3></div>
             <div id="medicoCanceladas"></div>`;
 
-        const listaPendientes = document.getElementById("medicoPendientes");
-        if (!pendientes.length) {
-            listaPendientes.innerHTML = `<div class="empty-state"><h4>No tienes citas pendientes</h4><p>Cuando un paciente solicite una cita contigo, aparecerá aquí para que la confirmes.</p></div>`;
-        } else {
-            listaPendientes.innerHTML = pendientes.map(tarjetaCitaMedico).join("");
-            enlazarConfirmaciones(listaPendientes);
-        }
-
-        const listaCanceladas = document.getElementById("medicoCanceladas");
-        listaCanceladas.innerHTML = canceladas.length
-            ? canceladas.map(tarjetaCitaMedico).join("")
-            : `<div class="empty-state"><h4>No hay citas canceladas</h4></div>`;
+        const listaPendientes = pintarListaCitasMedico("medicoPendientes", pendientes,
+            "No tienes citas pendientes", "Cuando un paciente solicite una cita contigo, aparecerá aquí para que la confirmes.");
+        enlazarConfirmaciones(listaPendientes);
+        pintarListaCitasMedico("medicoConfirmadas", confirmadas, "Aún no has confirmado citas", "");
+        pintarListaCitasMedico("medicoCanceladas", canceladas, "No hay citas canceladas", "");
     } catch (error) {
         contenido.innerHTML = `<div class="error-state"><h3>No pudimos cargar tu agenda</h3><p>${escaparHTML(error.message)}</p><button type="button" class="btn-primary" id="btnReintentarAgenda">Intentar de nuevo</button></div>`;
         document.getElementById("btnReintentarAgenda").addEventListener("click", mostrarPanelMedico);
     }
-}
-
-/* ===================== Panel del administrador ===================== */
-
-async function registrarMedico(datos) {
-    return apiRequest("/admin/medicos", {
-        method: "POST",
-        body: JSON.stringify(datos)
-    });
-}
-
-function mostrarPanelAdmin() {
-    const contenido = document.getElementById("contenido");
-    contenido.innerHTML = `
-        <div class="section-heading"><div><span class="eyebrow">ADMINISTRACIÓN</span><h3>Registrar médico</h3>
-        <p>Crea la cuenta de un nuevo médico. Podrá iniciar sesión con el correo y la contraseña que definas aquí.</p></div></div>
-        <form id="formRegistroMedico" class="appointment-form" autocomplete="off">
-            <div class="form-row">
-                <div class="form-group"><label for="medNombre">Nombre *</label><input id="medNombre" type="text" maxlength="80" required></div>
-                <div class="form-group"><label for="medApellido">Apellido *</label><input id="medApellido" type="text" maxlength="80" required></div>
-            </div>
-            <div class="form-row">
-                <div class="form-group"><label for="medEmail">Correo electrónico *</label><input id="medEmail" type="email" maxlength="120" required></div>
-                <div class="form-group"><label for="medPassword">Contraseña *</label><input id="medPassword" type="password" minlength="8" maxlength="72" autocomplete="new-password" required></div>
-            </div>
-            <div class="form-row">
-                <div class="form-group"><label for="medEspecialidad">Especialidad *</label><input id="medEspecialidad" type="text" maxlength="100" placeholder="Ej. Cardiología" required></div>
-                <div class="form-group"><label for="medTelefono">Teléfono (opcional)</label><input id="medTelefono" type="tel" maxlength="20" placeholder="Ej. 300 123 4567"></div>
-            </div>
-            <div class="form-notice" role="note">La contraseña debe tener al menos 8 caracteres. El teléfono es opcional.</div>
-            <div class="form-actions"><button class="btn-secondary" type="reset">Limpiar</button><button class="btn-primary" type="submit" id="btnGuardarMedico">Registrar médico</button></div>
-        </form>`;
-
-    const form = document.getElementById("formRegistroMedico");
-    form.addEventListener("submit", async event => {
-        event.preventDefault();
-        const datos = {
-            nombre: document.getElementById("medNombre").value.trim(),
-            apellido: document.getElementById("medApellido").value.trim(),
-            email: document.getElementById("medEmail").value.trim(),
-            password: document.getElementById("medPassword").value,
-            especialidad: document.getElementById("medEspecialidad").value.trim(),
-            telefono: document.getElementById("medTelefono").value.trim()
-        };
-        if (!datos.nombre || !datos.apellido || !datos.email || !datos.password || !datos.especialidad) {
-            mostrarToast("Completa todos los campos obligatorios.");
-            return;
-        }
-        if (datos.password.length < 8) {
-            mostrarToast("La contraseña debe tener al menos 8 caracteres.");
-            return;
-        }
-        const boton = document.getElementById("btnGuardarMedico");
-        boton.disabled = true;
-        boton.textContent = "Registrando...";
-        try {
-            const respuesta = await registrarMedico(datos);
-            mostrarToast(respuesta.mensaje || "Médico registrado correctamente.");
-            form.reset();
-        } catch (error) {
-            mostrarToast(error.message || "No se pudo registrar al médico.");
-        } finally {
-            boton.disabled = false;
-            boton.textContent = "Registrar médico";
-        }
-    });
 }

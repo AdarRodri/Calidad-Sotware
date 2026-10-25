@@ -33,12 +33,17 @@ document.addEventListener("DOMContentLoaded", () => {
             const btnCitas = document.getElementById("btnCitas");
             btnCitas.textContent = usuario.rol === "medico" ? "Mi agenda" : "Mis citas";
         }
+        // El botón "Gestionar médicos" solo lo ve el administrador.
+        document.getElementById("btnMedicos").classList.toggle("hidden", usuario?.rol !== "admin");
+
         if (usuario?.rol === "paciente") {
             await mostrarPanelPaciente();
         } else if (usuario?.rol === "medico") {
             await mostrarPanelMedico();
+        } else if (usuario?.rol === "admin") {
+            await mostrarGestionMedicos();
         } else {
-            mostrarPanelAdmin();
+            contenido.innerHTML = `<h3>Inicio</h3><p>Bienvenido al sistema MediCitas.</p>`;
         }
     }
 
@@ -80,7 +85,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const usuario = obtenerUsuario();
         if (usuario?.rol === "paciente") await mostrarPanelPaciente();
         else if (usuario?.rol === "medico") await mostrarPanelMedico();
-        else if (usuario?.rol === "admin") mostrarPanelAdmin();
+        else if (usuario?.rol === "admin") await mostrarGestionMedicos();
         else contenido.innerHTML = `<h3>Inicio</h3><p>Bienvenido al sistema MediCitas.</p>`;
     });
 
@@ -88,9 +93,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const usuario = obtenerUsuario();
         if (usuario?.rol === "paciente") await mostrarCitas();
         else if (usuario?.rol === "medico") await mostrarPanelMedico();
-        else if (usuario?.rol === "admin") mostrarPanelAdmin();
         else contenido.innerHTML = `<h3>Gestión de citas</h3><p>Selecciona un módulo autorizado.</p>`;
     });
+
+    document.getElementById("btnMedicos").addEventListener("click", mostrarGestionMedicos);
 
     document.getElementById("btnPerfil").addEventListener("click", async () => {
         try {

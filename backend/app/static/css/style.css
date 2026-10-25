@@ -535,3 +535,15 @@ body {
 @media(max-width:700px){.stats-grid{grid-template-columns:1fr}.appointment-card{align-items:flex-start;flex-wrap:wrap}.appointment-actions{width:100%;flex-direction:row;align-items:center;justify-content:space-between}.filters-row{grid-template-columns:1fr}.appointment-form .form-row,.profile-grid{grid-template-columns:1fr}.section-heading .btn-primary{width:100%}.form-actions{flex-direction:column-reverse}.form-actions button{width:100%}}
 
 .btn-success{border-color:#a9dcc0;background:#e5f7ed;color:#167647}.btn-success:hover{background:#d3f0e0}
+
+/* ADMINISTRADOR: gestión de médicos */
+.doctor-admin-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px;align-items:start}
+.doctor-form-card,.doctor-list-card{padding:22px;border:1px solid var(--border);border-radius:14px;background:#fff}
+.doctor-form-card h4{margin:0 0 6px;font-size:19px;color:var(--text)}
+.doctor-form-help{margin:0 0 18px;color:var(--muted);font-size:13px}
+.doctor-list-card .panel-subheading{margin-top:0}
+.doctor-admin-card{display:flex;align-items:center;gap:14px;padding:14px;margin:10px 0;border:1px solid var(--border);border-radius:12px;background:#fbfdff}
+.doctor-avatar{width:44px;min-width:44px;height:44px;border-radius:50%;background:#eaf4fb;color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px}
+.doctor-admin-info{flex:1;min-width:0}.doctor-admin-info h4{margin:0 0 6px;color:var(--text)}.doctor-admin-info p{margin:3px 0;color:var(--muted);font-size:13px;overflow-wrap:anywhere}
+.appointment-note{color:var(--muted);font-size:12px;text-align:right}
+@media(max-width:900px){.doctor-admin-layout{grid-template-columns:1fr}}
