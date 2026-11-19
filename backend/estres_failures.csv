@@ -1,0 +1,4 @@
+Method,Name,Error,Occurrences,First Seen,Last Seen
+POST,/api/auth/login,"ConnectionRefusedError(10061, '[WinError 10061] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión.')",200,2026-11-19T23:29:54Z,2026-11-19T23:30:03Z
+GET,/api/citas,"ConnectionRefusedError(10061, '[WinError 10061] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión.')",321,2026-11-19T23:29:56Z,2026-11-19T23:30:17Z
+GET,/api/medicos,"ConnectionRefusedError(10061, '[WinError 10061] No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión.')",595,2026-11-19T23:29:56Z,2026-11-19T23:30:17Z
