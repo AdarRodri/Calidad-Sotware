@@ -6,6 +6,7 @@ from app.extensions import db
 
 from app.models.usuario import Usuario
 from app.models.medico import Medico
+from app.models.historia_clinica import HistoriaClinica
 
 from app.utils.decorators import requiere_rol
 
@@ -15,6 +16,30 @@ medicos_bp = Blueprint(
     __name__,
     url_prefix="/api/medicos"
 )
+
+
+@medicos_bp.route(
+    "/publico",
+    methods=["GET"]
+)
+def listar_medicos_publico():
+    """Catálogo público: no requiere sesión y no expone correo ni teléfono."""
+
+    medicos = Medico.query.order_by(
+        Medico.id.asc()
+    ).all()
+
+    return jsonify({
+        "medicos": [
+            {
+                "id": medico.id,
+                "nombre": medico.usuario.nombre,
+                "apellido": medico.usuario.apellido,
+                "especialidad": medico.especialidad
+            }
+            for medico in medicos
+        ]
+    }), 200
 
 
 @medicos_bp.route(
@@ -273,6 +298,17 @@ def eliminar_medico(medico_id):
         return jsonify({
             "error": "Médico no encontrado"
         }), 404
+
+    if HistoriaClinica.query.filter_by(
+        medico_id=medico.id
+    ).first() is not None:
+
+        return jsonify({
+            "error": (
+                "No se puede eliminar un médico "
+                "con historias clínicas registradas"
+            )
+        }), 409
 
     usuario = medico.usuario
 

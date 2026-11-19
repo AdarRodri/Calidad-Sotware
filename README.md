@@ -1,9 +1,5 @@
 
-Paciente = Lo puedes registar
 
-Medico:
-Usuario: Poco@gmail.com 
-Contraseña: 123456789
 
 
 # MediCitas

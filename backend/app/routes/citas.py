@@ -6,6 +6,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from sqlalchemy.orm import object_session
 
 from app.models.cita import Cita
+from app.utils.tiempo import ahora
 from app.models.medico import Medico
 
 try:
@@ -106,7 +107,7 @@ def crear():
     except (TypeError, ValueError):
         return jsonify({"error": "La fecha debe tener un formato válido."}), 400
 
-    if fecha <= datetime.now():
+    if fecha <= ahora():
         return jsonify({"error": "La cita debe programarse para una fecha y hora futuras."}), 400
 
     paciente_id = int(get_jwt_identity())
@@ -156,7 +157,7 @@ def cancelar(cita_id):
         return jsonify({"error": "Esta cita ya está cancelada."}), 409
     if cita.estado == "atendida":
         return jsonify({"error": "No puedes cancelar una cita que ya fue atendida."}), 409
-    if cita.fecha_hora <= datetime.now():
+    if cita.fecha_hora <= ahora():
         return jsonify({"error": "No puedes cancelar una cita cuya hora ya pasó."}), 409
 
     cancelar_cita(cita)
@@ -186,7 +187,7 @@ def confirmar(cita_id):
         return jsonify({"error": "No puedes confirmar una cita cancelada."}), 409
     if estado == "atendida":
         return jsonify({"error": "Esta cita ya fue atendida."}), 409
-    if cita.fecha_hora <= datetime.now():
+    if cita.fecha_hora <= ahora():
         return jsonify({"error": "No puedes confirmar una cita cuya hora ya pasó."}), 409
 
     cita.estado = "confirmada"

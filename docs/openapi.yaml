@@ -13,6 +13,9 @@ tags:
   - name: Usuarios
   - name: Médicos
   - name: Citas
+  - name: Historias clínicas
+  - name: Recordatorios
+  - name: Reportes
 
 paths:
 
@@ -207,6 +210,285 @@ paths:
 
         "404":
           description: Cita no encontrada
+
+
+  /api/citas/{cita_id}/confirmar:
+
+    put:
+
+      tags:
+        - Citas
+
+      summary: Confirmar cita (médico)
+
+      security:
+        - bearerAuth: []
+
+      parameters:
+
+        - name: cita_id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+      responses:
+
+        "200":
+          description: Cita confirmada
+
+        "403":
+          description: Sin permisos
+
+        "404":
+          description: Cita no encontrada
+
+        "409":
+          description: La cita no se puede confirmar
+
+
+  /api/historias:
+
+    get:
+
+      tags:
+        - Historias clínicas
+
+      summary: Listar las historias clínicas del médico (opcional ?paciente_id=)
+
+      security:
+        - bearerAuth: []
+
+      responses:
+
+        "200":
+          description: Lista de historias clínicas
+
+        "401":
+          description: No autenticado
+
+        "403":
+          description: Solo médicos
+
+    post:
+
+      tags:
+        - Historias clínicas
+
+      summary: Registrar la atención de una cita (marca la cita como atendida)
+
+      security:
+        - bearerAuth: []
+
+      requestBody:
+
+        required: true
+
+        content:
+
+          application/json:
+
+            schema:
+
+              type: object
+
+              required:
+                - cita_id
+                - diagnostico
+
+              properties:
+
+                cita_id:
+                  type: integer
+
+                diagnostico:
+                  type: string
+                  maxLength: 4000
+
+                evolucion:
+                  type: string
+                  maxLength: 4000
+
+                observaciones:
+                  type: string
+                  maxLength: 4000
+
+      responses:
+
+        "201":
+          description: Historia clínica registrada
+
+        "400":
+          description: Datos inválidos
+
+        "403":
+          description: La cita no pertenece al médico
+
+        "404":
+          description: Cita no encontrada
+
+        "409":
+          description: Cita cancelada, futura o con historia existente
+
+
+  /api/historias/{historia_id}:
+
+    put:
+
+      tags:
+        - Historias clínicas
+
+      summary: Actualizar una historia clínica propia
+
+      security:
+        - bearerAuth: []
+
+      parameters:
+
+        - name: historia_id
+          in: path
+          required: true
+          schema:
+            type: integer
+
+      responses:
+
+        "200":
+          description: Historia actualizada
+
+        "400":
+          description: Datos inválidos
+
+        "403":
+          description: La historia pertenece a otro médico
+
+        "404":
+          description: Historia no encontrada
+
+
+  /api/notificaciones:
+
+    get:
+
+      tags:
+        - Recordatorios
+
+      summary: Recordatorios vigentes del paciente (genera los pendientes)
+
+      security:
+        - bearerAuth: []
+
+      responses:
+
+        "200":
+          description: Lista de recordatorios
+
+        "401":
+          description: No autenticado
+
+        "403":
+          description: Solo pacientes
+
+
+  /api/recordatorios/procesar:
+
+    post:
+
+      tags:
+        - Recordatorios
+
+      summary: Generar y enviar los recordatorios de citas próximas
+
+      description: >
+        Se autoriza con la cabecera X-Cron-Token (tarea programada)
+        o con un token JWT de administrador.
+
+      security:
+        - bearerAuth: []
+
+      responses:
+
+        "200":
+          description: Resumen del proceso
+
+        "401":
+          description: Sin autorización
+
+        "403":
+          description: Sin permisos
+
+
+  /api/reportes/resumen:
+
+    get:
+
+      tags:
+        - Reportes
+
+      summary: Métricas de citas (atendidas, canceladas, pendientes)
+
+      security:
+        - bearerAuth: []
+
+      parameters:
+
+        - name: desde
+          in: query
+          schema:
+            type: string
+            format: date
+
+        - name: hasta
+          in: query
+          schema:
+            type: string
+            format: date
+
+      responses:
+
+        "200":
+          description: Métricas por estado, médico y mes
+
+        "400":
+          description: Rango de fechas inválido
+
+        "403":
+          description: Solo administradores
+
+
+  /api/reportes/citas.csv:
+
+    get:
+
+      tags:
+        - Reportes
+
+      summary: Descargar el reporte de citas en CSV
+
+      security:
+        - bearerAuth: []
+
+      parameters:
+
+        - name: desde
+          in: query
+          schema:
+            type: string
+            format: date
+
+        - name: hasta
+          in: query
+          schema:
+            type: string
+            format: date
+
+      responses:
+
+        "200":
+          description: Archivo CSV
+
+        "403":
+          description: Solo administradores
 
 
 components:
